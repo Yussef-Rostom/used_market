@@ -23,6 +23,7 @@ const register = (req, res, next) => {
         body('firstName').notEmpty().withMessage('firstName is required'),
         body('lastName').notEmpty().withMessage('lastName is required'),
         body('email').isEmail().withMessage('email is not valid'),
+        body('phoneNumber').isLength(11).withMessage('phoneNumber must be at 11 number'),
         body('password').isLength({ min: 6 }).withMessage('password must be at least 6 characters long')
     ]
 }
@@ -30,7 +31,7 @@ const register = (req, res, next) => {
 const login = (req, res, next) => {
     return [
         body('email').isEmail().withMessage('email is not valid'),
-        body('password').notEmpty().withMessage('passwordedgeed is required'),
+        body('password').notEmpty().withMessage('password is required'),
     ]
 }
 
@@ -54,5 +55,4 @@ module.exports = {
     register,
     login,
     createProduct,
-
 };

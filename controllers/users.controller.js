@@ -6,7 +6,7 @@ const { addToBlacklist } = require('../middlewares/verifyToken');
 // POST api/users/register
 const register = async (req, res) => {
 
-    const { firstName, lastName, email, password } = req.body;
+    const { firstName, lastName, email, phoneNumber, password } = req.body;
 
     const oldUser = await User.findOne({ email });
     if (oldUser) return res.status(400).json({ message: 'User already exists' });
@@ -17,11 +17,11 @@ const register = async (req, res) => {
         firstName,
         lastName,
         email,
-        password: hashedPassword,
+        phoneNumber,
+        password: hashedPassword,   
     });
 
-
-    const token = jwt.sign({ id: user._id, role: user.role }, 'SECRET', {
+    const token = jwt.sign({ id: user._id }, 'SECRET', {
         expiresIn: '1h',
     });
 
@@ -83,6 +83,18 @@ const updateMyProfile = async (req, res) => {
     res.status(200).json({ status: 'success', data: req.body });
 };
 
+const contactWith = async (req, res) => {
+    try{
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ status: 'fail', message: 'User not found' });
+        res.json({ status: 'success', data: user['phoneNumber'] });
+    }
+    catch(err){
+        res.status(404).json({ status: 'fail', message: 'User not found' });
+    }
+};
+
+
 // =============== admin only ===============
 // GET /api/users
 const getAllUsers = async (req, res) => {
@@ -92,35 +104,51 @@ const getAllUsers = async (req, res) => {
 
 // GET /api/users/:id
 const getUserById = async (req, res) => {
-    const user = await User.findById(req.params.id).select('-password -__v');
-    if (!user) return res.status(404).json({ status: 'fail', message: 'User not found' });
-    res.json({ status: 'success', data: user });
+    try{
+        const user = await User.findById(req.params.id).select('-password -__v');
+        if (!user) return res.status(404).json({ status: 'fail', message: 'User not found' });
+        res.json({ status: 'success', data: user });
+    }
+    catch(err){
+        res.status(404).json({ status: 'fail', message: 'User not found' });
+    }
 };
 
 // PUT /api/users/:id
 const updateUser = async (req, res) => {
-    const updated = await prepareUserToUpdate(req);
-    const user = await User.findByIdAndUpdate(req.params.id, updated, {
-        runValidators: true,
-    });
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    try{
+        const updated = await prepareUserToUpdate(req);
+        const user = await User.findByIdAndUpdate(req.params.id, updated, {
+            runValidators: true,
+        });
+        if (!user) return res.status(404).json({ message: 'User not found' });
 
-    updated.password = req.body.password;
-    updated._id = req.body._id;
-    
-    res.json({ status: 'success', data: updated });
+        updated.password = req.body.password;
+        updated._id = req.body._id;
+        
+        res.json({ status: 'success', data: updated });
+    }
+    catch(err){
+        res.status(404).json({ status: 'fail', message: 'User not found' });
+    }
 };
 
 // DELETE /api/users/:id
 const deleteUser = async (req, res) => {
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json({ status: 'success', message: 'User deleted' });
+    try{
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json({ status: 'success', message: 'User deleted' });
+    }
+    catch(err){
+        res.status(404).json({ status: 'fail', message: 'User not found' });
+    }
 };
 
 module.exports = {
     getMyProfile,
     updateMyProfile,
+    contactWith,
     getAllUsers,
     getUserById,
     updateUser,

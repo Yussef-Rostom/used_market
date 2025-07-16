@@ -6,6 +6,7 @@ const getAllProducts = async (req, res) => {
 }
 
 const createProduct = async (req, res) => {
+
     const {name, description, price, category} = req.body;
 
     const product = await Product.create({
@@ -16,6 +17,7 @@ const createProduct = async (req, res) => {
         imageUrl: req.file.path,
         createdBy: req.user.id
     });
+    
     product.save();
     if (!product) return res.status(400).json({ status: 'fail', message: 'Product creation failed' });
     res.status(201).json({ status: 'success', data: product });

@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const blacklist = new Set();
 
 const verifyToken = (req, res, next) => {
+
     req.token = req.headers.authorization?.split(" ")[1];
 
     if (!req.token) return res.status(401).json({ message: "Access denied. No token provided." });

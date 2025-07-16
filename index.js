@@ -1,5 +1,6 @@
-const express = require('express');
+const path =require('path');
 const cors = require('cors');
+const express = require('express');
 const connection = require('./db/connection');
 const userRoutes = require('./routes/users.route'); 
 const productsRoutes = require('./routes/products.route'); 
@@ -12,6 +13,7 @@ app.use(express.json());
 
 app.use('/api/users', userRoutes);
 app.use('/api/products', productsRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 connection();
 
