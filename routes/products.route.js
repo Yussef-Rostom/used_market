@@ -7,7 +7,16 @@ const multer = require('multer');
 const validator = require('../middlewares/validation');
 const {validate} = require('../middlewares/validation')
 const router = express.Router();
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
+require('dotenv').config();
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 const upload = multerSetup();
 
@@ -25,25 +34,22 @@ router.route('/category/:category')
     .get(productsController.getAllProductsByCategory);
 
 
-
 function multerSetup() {
-    const diskStorage = multer.diskStorage({
-        destination: function(req, file, cb){
-            cb(null,'uploads')
+    const storage = new CloudinaryStorage({
+        cloudinary: cloudinary,
+        params: {
+            folder: 'product_images',
+            public_id: (req, file) => `product-${Date.now()}-${file.originalname.split('.')[0]}`,
         },
-        filename: function(req,file,cb){
-            let ext = file.mimetype.split('/')[1]
-            const fileName = `product-${Date.now()}.${ext}`
-            cb(null, fileName)
-        }
-    })
+        allowedFormats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    });
 
-    const fileFilter = function (req,file,cb){
-        const imageType = file.mimetype.split('/')[0]
-        if(imageType == 'image') return cb(null, true)
-        cb({error:'not valid'}, false)
-    }
-    return multer({ storage: diskStorage, fileFilter });
+    return multer({
+        storage: storage,
+        limits: {
+            fileSize: 5 * 1024 * 1024
+        },
+    });
 }
 
 module.exports = router;
