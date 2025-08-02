@@ -6,6 +6,7 @@ const userRoutes = require('./routes/users.route');
 const productsRoutes = require('./routes/products.route'); 
 
 const app = express();
+const port = process.env.PORT || 3000;
 
 app.use(cors());
 
@@ -17,6 +18,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 connection();
 
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
