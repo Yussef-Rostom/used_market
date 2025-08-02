@@ -42,9 +42,28 @@ const updateProduct = async (req, res) => {
 };
 
 const deleteProduct = async (req, res) => {
-    const product = await Product.findByIdAndDelete(req.params.id);
-    if (!product) return res.status(404).json({ status: 'fail', message: 'Product not found' });
-    res.status(200).json({ status: 'success', message: 'Product deleted successfully' });
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ error: 'Product not found' });
+
+        if (product.imageUrl) {
+            try {
+                const resource = await cloudinary.api.resource_by_url(product.imageUrl);
+                await cloudinary.uploader.destroy(resource.public_id);
+            } catch (cloudinaryError) {
+                console.warn('Cloudinary deletion warning:', cloudinaryError.message);
+            }
+        }
+
+        await Product.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: 'Product deleted successfully' });
+    } catch (error) {
+        console.error('Delete error:', error);
+        res.status(500).json({ 
+            error: 'Failed to delete product',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
 }
 
 const getAllProductsByCategory = async (req, res) => {
