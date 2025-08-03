@@ -1,8 +1,14 @@
 const Product = require('../models/product.model');
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 const getAllProducts = async (req, res) => {
     const products = await Product.find();
-    res.status(200).json({ status: 'success', data: products }).select("-__v");
+    res.status(200).json({ status: 'success', data: products });
 }
 
 const createProduct = async (req, res) => {
@@ -48,10 +54,20 @@ const deleteProduct = async (req, res) => {
 
         if (product.imageUrl) {
             try {
-                const resource = await cloudinary.api.resource_by_url(product.imageUrl);
-                await cloudinary.uploader.destroy(resource.public_id);
+                const urlParts = product.imageUrl.split('/');
+                const uploadIndex = urlParts.findIndex(part => part === 'upload');
+
+                if (uploadIndex === -1) {
+                    console.error('Invalid Cloudinary URL:', product.imageUrl);
+                } else {
+                    const publicIdWithExt = urlParts.slice(uploadIndex + 2).join('/');
+                    const publicId = publicIdWithExt.replace(/\.[^/.]+$/, ""); // Remove extension
+
+                    await cloudinary.uploader.destroy(publicId);
+                    console.log(`Deleted Cloudinary file: ${publicId}`);
+                }
             } catch (cloudinaryError) {
-                console.warn('Cloudinary deletion warning:', cloudinaryError.message);
+                console.error('Cloudinary deletion failed:', cloudinaryError.message);
             }
         }
 
@@ -68,7 +84,7 @@ const deleteProduct = async (req, res) => {
 
 const getAllProductsByCategory = async (req, res) => {
     const products = await Product.find({category:req.params.category});
-    res.status(200).json({ status: 'success', data: products }).select("-__v");
+    res.status(200).json({ status: 'success', data: products })
 }
 
 module.exports = {
