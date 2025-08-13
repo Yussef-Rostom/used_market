@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 
-async function connection() {
+async function connectToAtlas() {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
+      maxPoolSize: 10,
+      socketTimeoutMS: 45000,
     });
     console.log('Connected to MongoDB Atlas');
   } catch (err) {
@@ -24,7 +24,7 @@ mongoose.connection.on('error', (err) => {
 
 mongoose.connection.on('disconnected', () => {
   console.log('Mongoose disconnected from Atlas');
-  connectToAtlas();
+  setTimeout(connectToAtlas, 5000);
 });
 
-module.exports = connection;
+module.exports = connectToAtlas;
